@@ -1,5 +1,0 @@
-aws-cdk-lib
-aws-sam-cli
-boto3
-aws-cdk.aws-amplify-alpha==2.38.1-alpha.0
-# aws-solutions-constructs.core
