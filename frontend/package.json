@@ -8,7 +8,7 @@
     "gatsby"
   ],
   "scripts": {
-    "develop": "gatsby develop",
+    "develop": "sst-env -- gatsby develop",
     "start": "gatsby develop",
     "build": "gatsby build",
     "serve": "gatsby serve",
@@ -16,6 +16,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@serverless-stack/static-site-env": "^1.9.4",
     "gatsby": "^4.21.1",
     "react": "^18.1.0",
     "react-dom": "^18.1.0"
