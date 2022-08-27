@@ -1,1 +1,0 @@
-# aws_cdk_simple_web_with_lambda
