@@ -1,6 +1,9 @@
 # User
 
 yarn.lock
+.build
+.sst
+.env.local
 
 # compiled output
 /dist
