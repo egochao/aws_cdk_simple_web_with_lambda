@@ -6,13 +6,4 @@ export default defineConfig({
   test: {
     testTimeout: 30000,
   },
-  logLevel: "info",
-  esbuild: {
-    sourcemap: "both",
-  },
-  resolve: {
-    alias: {
-      "@gatsby-app/core": "./services/core",
-    },
-  },
 });
