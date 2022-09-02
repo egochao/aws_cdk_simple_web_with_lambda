@@ -8,4 +8,8 @@ const app = new cdk.App();
 
 const authStack = new CognitoStack(app, 'CognitoStack');
 
-const website = new StaticWebStack(app, 'StaticWebStack');
+const website = new StaticWebStack(app, 'StaticWebStack', {
+        userPoolId: authStack.userPoolId,
+        userPoolClientId: authStack.userPoolClientId,
+    }
+);
