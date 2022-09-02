@@ -30,6 +30,5 @@ export class StaticWebStack extends cdk.Stack {
         new cdk.CfnOutput(this, 'SiteUrl', {
             value: amplifyApp.defaultDomain,
         });
-        
     }
 }
