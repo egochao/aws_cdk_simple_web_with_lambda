@@ -1,0 +1,13 @@
+# User define
+
+*dummy*
+
+
+!jest.config.js
+*.d.ts
+node_modules
+.env.local
+.env
+# CDK asset staging directory
+.cdk.staging
+cdk.out
