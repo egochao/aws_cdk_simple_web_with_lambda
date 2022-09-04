@@ -21,7 +21,7 @@ export class StaticWebStack extends cdk.Stack {
         const githubOwner = 'egochao';
         const githubRepo = 'simple_gatsby_blog';
         const githubProdBranch = 'master';
-        const githubDevBranch = 'devevelop';
+        const githubDevBranch = 'develop';
         
         const githubToken = secretsmanager.Secret.fromSecretNameV2(
             this, 'githubToken', githubSecret.secretName).secretValue;
