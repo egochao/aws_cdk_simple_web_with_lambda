@@ -6,7 +6,8 @@ import * as iam from 'aws-cdk-lib/aws-iam';
 export class CognitoStack extends cdk.Stack {
     public readonly userPoolId: string;
     public readonly userPoolClientId: string;
-    public readonly IdentityPoolId: string | undefined;
+    public readonly identityPoolId: string;
+    public readonly region: string;
     constructor(scope: cdk.App, id: string, props?: cdk.StackProps) {
         super(scope, id, props);
 
@@ -116,7 +117,8 @@ export class CognitoStack extends cdk.Stack {
         
         this.userPoolId = userPool.userPoolId;
         this.userPoolClientId = userPoolClient.userPoolClientId;
-        this.IdentityPoolId = identityPool.ref;
+        this.identityPoolId = identityPool.ref;
+        this.region = process.env.CDK_DEFAULT_REGION || "us-east-1";
         new cdk.CfnOutput(this, 'UserPoolId', {
             value: this.userPoolId,
         });
@@ -124,7 +126,10 @@ export class CognitoStack extends cdk.Stack {
             value: this.userPoolClientId,
         });
         new cdk.CfnOutput(this, 'IdentityPoolId', {
-            value: this.IdentityPoolId,
+            value: this.identityPoolId,
+        });
+        new cdk.CfnOutput(this, 'Region', {
+            value: this.region,
         });
         
     }

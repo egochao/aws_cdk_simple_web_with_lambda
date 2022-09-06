@@ -33,6 +33,9 @@ export class StaticWebStack extends cdk.Stack {
                 repository: githubRepo,
                 oauthToken: githubToken,
             }),
+            environmentVariables: {
+                
+            },
         });
         
         const prodBranch = amplifyApp.addBranch(githubProdBranch);
