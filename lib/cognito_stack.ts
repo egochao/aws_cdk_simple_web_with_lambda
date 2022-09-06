@@ -27,7 +27,7 @@ export class CognitoStack extends cdk.Stack {
         const userPoolClient = new cognito.UserPoolClient(this, 'UserPoolClient', {
             userPool,
             userPoolClientName: 'static-web-app-user-pool-client',
-            generateSecret: true
+            generateSecret: false
         });
 
 
@@ -116,7 +116,7 @@ export class CognitoStack extends cdk.Stack {
         
         this.userPoolId = userPool.userPoolId;
         this.userPoolClientId = userPoolClient.userPoolClientId;
-        this.IdentityPoolId = identityPool.attrName || "None";
+        this.IdentityPoolId = identityPool.ref;
         new cdk.CfnOutput(this, 'UserPoolId', {
             value: this.userPoolId,
         });
