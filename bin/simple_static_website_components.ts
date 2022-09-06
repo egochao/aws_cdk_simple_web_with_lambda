@@ -11,5 +11,7 @@ const authStack = new CognitoStack(app, 'CognitoStack');
 const website = new StaticWebStack(app, 'StaticWebStack', {
         userPoolId: authStack.userPoolId,
         userPoolClientId: authStack.userPoolClientId,
+        identityPoolId: authStack.identityPoolId,
+        cognitoRegion: authStack.region,
     }
 );

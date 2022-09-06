@@ -3,19 +3,15 @@ import * as amplify from '@aws-cdk/aws-amplify-alpha';
 import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 
 interface WebProps extends cdk.StackProps {
-    userPoolId?: string;
-    userPoolClientId?: string;
-  }
+    userPoolId: string;
+    userPoolClientId: string;
+    identityPoolId: string;
+    cognitoRegion: string;
+}
   
 export class StaticWebStack extends cdk.Stack {
     constructor(scope: cdk.App, id: string, props?: WebProps) {
         super(scope, id, props);
-
-        if (!props || !props.userPoolId || !props.userPoolClientId) {
-            console.warn('Not using Amplify because no user pool id or client id was provided');
-        }
-        const userPoolId = props?.userPoolId;
-        const userPoolClientId = props?.userPoolClientId;
 
         const githubSecret = new secretsmanager.Secret(this, 'githubSecret')
         const githubOwner = 'egochao';
@@ -26,7 +22,14 @@ export class StaticWebStack extends cdk.Stack {
         const githubToken = secretsmanager.Secret.fromSecretNameV2(
             this, 'githubToken', githubSecret.secretName).secretValue;
         
-        
+        if (!(props?.userPoolId && 
+            props?.userPoolClientId && 
+            props?.identityPoolId && 
+            props?.cognitoRegion)) {
+            console.warn("Missing some Cognito parameters, input is: ", props);
+        }
+
+    
         const amplifyApp = new amplify.App(this, 'StaticWebApp', {
             sourceCodeProvider: new amplify.GitHubSourceCodeProvider({
                 owner: githubOwner,
@@ -34,7 +37,10 @@ export class StaticWebStack extends cdk.Stack {
                 oauthToken: githubToken,
             }),
             environmentVariables: {
-                
+                'REACT_APP_USER_POOL_ID': props?.userPoolId || "none",
+                'REACT_APP_USER_POOL_CLIENT_ID': props?.userPoolClientId || "none",
+                'REACT_APP_IDENTITY_POOL_ID': props?.identityPoolId || "none",
+                'REACT_APP_COGNITO_REGION': props?.cognitoRegion || "none",
             },
         });
         
