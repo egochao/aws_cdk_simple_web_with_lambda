@@ -2,8 +2,10 @@ import * as cdk from 'aws-cdk-lib';
 import * as amplify from '@aws-cdk/aws-amplify-alpha';
 import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 import * as codebuild from 'aws-cdk-lib/aws-codebuild';
+import { GithubCredentials } from './config';
 
 interface WebProps extends cdk.StackProps {
+    githubCred: GithubCredentials;
     userPoolId: string;
     userPoolClientId: string;
     identityPoolId: string;
@@ -11,27 +13,14 @@ interface WebProps extends cdk.StackProps {
 }
   
 export class StaticWebStack extends cdk.Stack {
-    constructor(scope: cdk.App, id: string, props?: WebProps) {
+    constructor(scope: cdk.App, id: string, props: WebProps) {
         super(scope, id, props);
 
-        const githubSecret = new secretsmanager.Secret(this, 'githubSecret')
-        const githubToken = secretsmanager.Secret.fromSecretNameV2(
-            this, 'githubToken', githubSecret.secretName).secretValue;
-
-        const githubOwner = 'egochao';
-        const githubRepo = 'simple_gatsby_blog';
-        const githubProdBranch = 'master';
-        const githubDevBranch = 'develop';
-        
-        
-        if (!(props?.userPoolId && 
-            props?.userPoolClientId && 
-            props?.identityPoolId && 
-            props?.cognitoRegion)) {
-            console.warn("Missing some Cognito parameters, input is: ", props);
-        } else {
-            console.log("Cognito parameters are: ", props);
-        }
+        const githubToken = props.githubCred.githubToken;
+        const githubOwner = props.githubCred.githubOwner;
+        const githubRepo = props.githubCred.githubRepo;
+        const githubProdBranch = props.githubCred.githubProdBranch;
+        const githubDevBranch = props.githubCred.githubDevBranch;
 
     
         const amplifyApp = new amplify.App(this, 'StaticWebApp', {
@@ -41,10 +30,10 @@ export class StaticWebStack extends cdk.Stack {
                 oauthToken: githubToken,
             }),
             environmentVariables: {
-                'GATSBY_USER_POOL_ID': props?.userPoolId || "none",
-                'GATSBY_USER_POOL_CLIENT_ID': props?.userPoolClientId || "none",
-                'GATSBY_IDENTITY_POOL_ID': props?.identityPoolId || "none",
-                'GATSBY_COGNITO_REGION': props?.cognitoRegion || "none",
+                'GATSBY_USER_POOL_ID': props.userPoolId || "none",
+                'GATSBY_USER_POOL_CLIENT_ID': props.userPoolClientId || "none",
+                'GATSBY_IDENTITY_POOL_ID': props.identityPoolId || "none",
+                'GATSBY_COGNITO_REGION': props.cognitoRegion || "none",
             },
             autoBranchCreation: { // Automatically connect branches that match a pattern set
                 patterns: ['feature/*', 'test/*'],
@@ -65,10 +54,7 @@ export class StaticWebStack extends cdk.Stack {
         domain.mapRoot(prodBranch); // map prodBranch branch to domain root
         domain.mapSubDomain(prodBranch, 'www');
         domain.mapSubDomain(developBranch); // sub domain prefix defaults to branch name
-          
-        new cdk.CfnOutput(this, 'githubTokenSecretArn', {
-            value: githubSecret.secretArn,
-        });
+
         new cdk.CfnOutput(this, 'SiteUrl', {
             value: amplifyApp.defaultDomain,
         });

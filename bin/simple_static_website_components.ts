@@ -3,16 +3,20 @@ import * as cdk from 'aws-cdk-lib';
 
 import { CognitoStack } from '../lib/cognito_stack';
 import { StaticWebStack } from '../lib/static_web_stack';
+import { SecretStack } from '../lib/secret_stack';
+
 
 const app = new cdk.App();
 
-const authStack = new CognitoStack(app, 'CognitoStack');
+const secretSt = new SecretStack(app, 'SecretStack');
 
+const authSt = new CognitoStack(app, 'CognitoStack');
 
-const website = new StaticWebStack(app, 'StaticWebStack', {
-        userPoolId: authStack.userPoolId,
-        userPoolClientId: authStack.userPoolClientId,
-        identityPoolId: authStack.identityPoolId,
-        cognitoRegion: authStack.region,
+const websiteSt = new StaticWebStack(app, 'StaticWebStack', {
+        githubCred: secretSt.githubCred,
+        userPoolId: authSt.userPoolId,
+        userPoolClientId: authSt.userPoolClientId,
+        identityPoolId: authSt.identityPoolId,
+        cognitoRegion: authSt.region,
     }
 );
