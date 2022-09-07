@@ -27,6 +27,8 @@ export class StaticWebStack extends cdk.Stack {
             props?.identityPoolId && 
             props?.cognitoRegion)) {
             console.warn("Missing some Cognito parameters, input is: ", props);
+        } else {
+            console.log("Cognito parameters are: ", props);
         }
 
     
@@ -37,10 +39,10 @@ export class StaticWebStack extends cdk.Stack {
                 oauthToken: githubToken,
             }),
             environmentVariables: {
-                'REACT_APP_USER_POOL_ID': props?.userPoolId || "none",
-                'REACT_APP_USER_POOL_CLIENT_ID': props?.userPoolClientId || "none",
-                'REACT_APP_IDENTITY_POOL_ID': props?.identityPoolId || "none",
-                'REACT_APP_COGNITO_REGION': props?.cognitoRegion || "none",
+                'GATSBY_USER_POOL_ID': props?.userPoolId || "none",
+                'GATSBY_USER_POOL_CLIENT_ID': props?.userPoolClientId || "none",
+                'GATSBY_IDENTITY_POOL_ID': props?.identityPoolId || "none",
+                'GATSBY_COGNITO_REGION': props?.cognitoRegion || "none",
             },
         });
         
