@@ -50,40 +50,10 @@ export class StaticWebStack extends cdk.Stack {
                 patterns: ['feature/*', 'test/*'],
             },
             autoBranchDeletion: true, // Automatically disconnect a branch when you delete a branch from your repository            
-            buildSpec: codebuild.BuildSpec.fromObjectToYaml({
-                // Alternatively add a `amplify.yml` to the repo
-                version: '1.0',
-                frontend: {
-                  phases: {
-                    preBuild: {
-                      commands: [
-                        'npm install',
-                      ],
-                    },
-                    build: {
-                      commands: [
-                        'echo GATSBY_USER_POOL_ID=$GATSBY_USER_POOL_ID >> .env',
-                        'echo GATSBY_USER_POOL_CLIENT_ID=$GATSBY_USER_POOL_CLIENT_ID >> .env',
-                        'echo GATSBY_IDENTITY_POOL_ID=$GATSBY_IDENTITY_POOL_ID >> .env',
-                        'echo GATSBY_COGNITO_REGION=$GATSBY_COGNITO_REGION >> .env',
-                        'npm run build',
-                      ],
-                    },
-                  },
-                  artifacts: {
-                    baseDirectory: 'public',
-                    files: [
-                        '**/*'
-                    ],
-                  },
-                  cache: {
-                    paths: ['node_modules/**/*'],
-                  },
-                },
-            }),
+            buildSpec: this.gatsbyBuildSpec,
         });
         
-        // amplifyApp.addCustomRule(amplify.CustomRule.SINGLE_PAGE_APPLICATION_REDIRECT);
+        amplifyApp.addCustomRule(amplify.CustomRule.SINGLE_PAGE_APPLICATION_REDIRECT);
 
         const prodBranch = amplifyApp.addBranch(githubProdBranch);
         const developBranch = amplifyApp.addBranch(githubDevBranch);
@@ -103,4 +73,38 @@ export class StaticWebStack extends cdk.Stack {
             value: amplifyApp.defaultDomain,
         });
     }
+
+
+    private readonly gatsbyBuildSpec = codebuild.BuildSpec.fromObjectToYaml({
+        // Alternatively add a `amplify.yml` to the repo
+        version: '1.0',
+        frontend: {
+            phases: {
+                preBuild: {
+                    commands: [
+                        'npm install',
+                    ],
+                },
+                build: {
+                    commands: [
+                        'echo GATSBY_USER_POOL_ID=$GATSBY_USER_POOL_ID >> .env',
+                        'echo GATSBY_USER_POOL_CLIENT_ID=$GATSBY_USER_POOL_CLIENT_ID >> .env',
+                        'echo GATSBY_IDENTITY_POOL_ID=$GATSBY_IDENTITY_POOL_ID >> .env',
+                        'echo GATSBY_COGNITO_REGION=$GATSBY_COGNITO_REGION >> .env',
+                        'npm run build',
+                    ],
+                },
+            },
+            artifacts: {
+                baseDirectory: 'public',
+                files: [
+                    '**/*'
+                ],
+            },
+            cache: {
+                paths: ['node_modules/**/*'],
+            },
+        },
+    });
+
 }
