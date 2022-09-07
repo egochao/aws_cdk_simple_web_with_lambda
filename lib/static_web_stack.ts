@@ -1,6 +1,7 @@
 import * as cdk from 'aws-cdk-lib';
 import * as amplify from '@aws-cdk/aws-amplify-alpha';
 import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
+import * as codebuild from 'aws-cdk-lib/aws-codebuild';
 
 interface WebProps extends cdk.StackProps {
     userPoolId: string;
@@ -14,13 +15,14 @@ export class StaticWebStack extends cdk.Stack {
         super(scope, id, props);
 
         const githubSecret = new secretsmanager.Secret(this, 'githubSecret')
+        const githubToken = secretsmanager.Secret.fromSecretNameV2(
+            this, 'githubToken', githubSecret.secretName).secretValue;
+
         const githubOwner = 'egochao';
         const githubRepo = 'simple_gatsby_blog';
         const githubProdBranch = 'master';
         const githubDevBranch = 'develop';
         
-        const githubToken = secretsmanager.Secret.fromSecretNameV2(
-            this, 'githubToken', githubSecret.secretName).secretValue;
         
         if (!(props?.userPoolId && 
             props?.userPoolClientId && 
@@ -44,11 +46,56 @@ export class StaticWebStack extends cdk.Stack {
                 'GATSBY_IDENTITY_POOL_ID': props?.identityPoolId || "none",
                 'GATSBY_COGNITO_REGION': props?.cognitoRegion || "none",
             },
+            autoBranchCreation: { // Automatically connect branches that match a pattern set
+                patterns: ['feature/*', 'test/*'],
+            },
+            autoBranchDeletion: true, // Automatically disconnect a branch when you delete a branch from your repository            
+            buildSpec: codebuild.BuildSpec.fromObjectToYaml({
+                // Alternatively add a `amplify.yml` to the repo
+                version: '1.0',
+                frontend: {
+                  phases: {
+                    preBuild: {
+                      commands: [
+                        'npm install',
+                      ],
+                    },
+                    build: {
+                      commands: [
+                        'echo GATSBY_USER_POOL_ID=$GATSBY_USER_POOL_ID >> .env',
+                        'echo GATSBY_USER_POOL_CLIENT_ID=$GATSBY_USER_POOL_CLIENT_ID >> .env',
+                        'echo GATSBY_IDENTITY_POOL_ID=$GATSBY_IDENTITY_POOL_ID >> .env',
+                        'echo GATSBY_COGNITO_REGION=$GATSBY_COGNITO_REGION >> .env',
+                        'npm run build',
+                      ],
+                    },
+                  },
+                  artifacts: {
+                    baseDirectory: 'public',
+                    files: [
+                        '**/*'
+                    ],
+                  },
+                  cache: {
+                    paths: ['node_modules/**/*'],
+                  },
+                },
+            }),
         });
         
+        // amplifyApp.addCustomRule(amplify.CustomRule.SINGLE_PAGE_APPLICATION_REDIRECT);
+
         const prodBranch = amplifyApp.addBranch(githubProdBranch);
         const developBranch = amplifyApp.addBranch(githubDevBranch);
 
+        const domain = amplifyApp.addDomain('ctablog.net', {
+            enableAutoSubdomain: true, // in case subdomains should be auto registered for branches
+            autoSubdomainCreationPatterns: ['*', 'pr*'], // regex for branches that should auto register subdomains
+          });
+        domain.mapRoot(prodBranch); // map prodBranch branch to domain root
+        domain.mapSubDomain(prodBranch, 'www');
+        domain.mapSubDomain(developBranch); // sub domain prefix defaults to branch name
+          
         new cdk.CfnOutput(this, 'githubTokenSecretArn', {
             value: githubSecret.secretArn,
         });
