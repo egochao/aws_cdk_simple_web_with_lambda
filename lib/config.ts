@@ -7,3 +7,10 @@ export interface GithubCredentials {
     githubDevBranch: string;
     githubToken: SecretValue;
 }
+
+export interface CognitoAuthEndpoints {
+    userPoolId: string;
+    userPoolClientId: string;
+    identityPoolId: string;
+    region: string;
+}

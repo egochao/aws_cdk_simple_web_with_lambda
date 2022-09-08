@@ -15,19 +15,12 @@ interface WebProps extends cdk.StackProps {
 export class StaticWebStack extends cdk.Stack {
     constructor(scope: cdk.App, id: string, props: WebProps) {
         super(scope, id, props);
-
-        const githubToken = props.githubCred.githubToken;
-        const githubOwner = props.githubCred.githubOwner;
-        const githubRepo = props.githubCred.githubRepo;
-        const githubProdBranch = props.githubCred.githubProdBranch;
-        const githubDevBranch = props.githubCred.githubDevBranch;
-
     
         const amplifyApp = new amplify.App(this, 'StaticWebApp', {
             sourceCodeProvider: new amplify.GitHubSourceCodeProvider({
-                owner: githubOwner,
-                repository: githubRepo,
-                oauthToken: githubToken,
+                owner: props.githubCred.githubOwner,
+                repository: props.githubCred.githubRepo,
+                oauthToken: props.githubCred.githubToken,
             }),
             environmentVariables: {
                 'GATSBY_USER_POOL_ID': props.userPoolId || "none",
@@ -42,24 +35,27 @@ export class StaticWebStack extends cdk.Stack {
             buildSpec: this.gatsbyBuildSpec,
         });
         
-        amplifyApp.addCustomRule(amplify.CustomRule.SINGLE_PAGE_APPLICATION_REDIRECT);
-
-        const prodBranch = amplifyApp.addBranch(githubProdBranch);
-        const developBranch = amplifyApp.addBranch(githubDevBranch);
-
-        const domain = amplifyApp.addDomain('ctablog.net', {
-            enableAutoSubdomain: true, // in case subdomains should be auto registered for branches
-            autoSubdomainCreationPatterns: ['*', 'pr*'], // regex for branches that should auto register subdomains
-          });
-        domain.mapRoot(prodBranch); // map prodBranch branch to domain root
-        domain.mapSubDomain(prodBranch, 'www');
-        domain.mapSubDomain(developBranch); // sub domain prefix defaults to branch name
+        this.configSite(amplifyApp, props); // sub domain prefix defaults to branch name
 
         new cdk.CfnOutput(this, 'SiteUrl', {
             value: amplifyApp.defaultDomain,
         });
     }
 
+    private configSite(amplifyApp: amplify.App, props: WebProps) {
+        amplifyApp.addCustomRule(amplify.CustomRule.SINGLE_PAGE_APPLICATION_REDIRECT);
+
+        const prodBranch = amplifyApp.addBranch(props.githubCred.githubProdBranch);
+        const developBranch = amplifyApp.addBranch(props.githubCred.githubDevBranch);
+
+        const domain = amplifyApp.addDomain('ctablog.net', {
+            enableAutoSubdomain: true,
+            autoSubdomainCreationPatterns: ['*', 'pr*'], // regex for branches that should auto register subdomains
+        });
+        domain.mapRoot(prodBranch); // map prodBranch branch to domain root
+        domain.mapSubDomain(prodBranch, 'www');
+        domain.mapSubDomain(developBranch);
+    }
 
     private readonly gatsbyBuildSpec = codebuild.BuildSpec.fromObjectToYaml({
         // Alternatively add a `amplify.yml` to the repo
