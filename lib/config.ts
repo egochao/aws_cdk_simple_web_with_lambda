@@ -8,7 +8,7 @@ export interface GithubCredentials {
     githubToken: SecretValue;
 }
 
-export interface CognitoAuthEndpoints {
+export interface CognitoAuthConfig {
     userPoolId: string;
     userPoolClientId: string;
     identityPoolId: string;

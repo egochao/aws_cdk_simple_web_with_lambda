@@ -1,13 +1,11 @@
 import * as cognito from 'aws-cdk-lib/aws-cognito';
 import * as cdk from 'aws-cdk-lib';
 import * as iam from 'aws-cdk-lib/aws-iam';
-
+import { CognitoAuthConfig } from './config';
 
 export class CognitoStack extends cdk.Stack {
-    public readonly userPoolId: string;
-    public readonly userPoolClientId: string;
-    public readonly identityPoolId: string;
-    public readonly region: string;
+    public readonly cognitoAuthEndpoints: CognitoAuthConfig;
+
     constructor(scope: cdk.App, id: string, props?: cdk.StackProps) {
         super(scope, id, props);
 
@@ -114,23 +112,20 @@ export class CognitoStack extends cdk.Stack {
                 },
               );
               
-        
-        this.userPoolId = userPool.userPoolId;
-        this.userPoolClientId = userPoolClient.userPoolClientId;
-        this.identityPoolId = identityPool.ref;
-        this.region = process.env.CDK_DEFAULT_REGION || "us-east-1";
+        this.cognitoAuthEndpoints = {
+            userPoolId: userPool.userPoolId,
+            userPoolClientId: userPoolClient.userPoolClientId,
+            identityPoolId: identityPool.ref,
+            region: process.env.CDK_DEFAULT_REGION || "us-east-1",
+        }
         new cdk.CfnOutput(this, 'UserPoolId', {
-            value: this.userPoolId,
+            value: this.cognitoAuthEndpoints.userPoolId,
         });
         new cdk.CfnOutput(this, 'UserPoolClientId', {
-            value: this.userPoolClientId,
+            value: this.cognitoAuthEndpoints.userPoolClientId,
         });
         new cdk.CfnOutput(this, 'IdentityPoolId', {
-            value: this.identityPoolId,
+            value: this.cognitoAuthEndpoints.identityPoolId,
         });
-        new cdk.CfnOutput(this, 'Region', {
-            value: this.region,
-        });
-        
     }
 }

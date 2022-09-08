@@ -14,9 +14,6 @@ const authSt = new CognitoStack(app, 'CognitoStack');
 
 const websiteSt = new StaticWebStack(app, 'StaticWebStack', {
         githubCred: secretSt.githubCred,
-        userPoolId: authSt.userPoolId,
-        userPoolClientId: authSt.userPoolClientId,
-        identityPoolId: authSt.identityPoolId,
-        cognitoRegion: authSt.region,
+        cognitoAuthEndpoints: authSt.cognitoAuthEndpoints,
     }
 );

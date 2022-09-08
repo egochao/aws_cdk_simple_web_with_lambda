@@ -1,15 +1,11 @@
 import * as cdk from 'aws-cdk-lib';
 import * as amplify from '@aws-cdk/aws-amplify-alpha';
-import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 import * as codebuild from 'aws-cdk-lib/aws-codebuild';
-import { GithubCredentials } from './config';
+import { GithubCredentials, CognitoAuthConfig } from './config';
 
 interface WebProps extends cdk.StackProps {
     githubCred: GithubCredentials;
-    userPoolId: string;
-    userPoolClientId: string;
-    identityPoolId: string;
-    cognitoRegion: string;
+    cognitoAuthEndpoints: CognitoAuthConfig;
 }
   
 export class StaticWebStack extends cdk.Stack {
@@ -23,10 +19,10 @@ export class StaticWebStack extends cdk.Stack {
                 oauthToken: props.githubCred.githubToken,
             }),
             environmentVariables: {
-                'GATSBY_USER_POOL_ID': props.userPoolId || "none",
-                'GATSBY_USER_POOL_CLIENT_ID': props.userPoolClientId || "none",
-                'GATSBY_IDENTITY_POOL_ID': props.identityPoolId || "none",
-                'GATSBY_COGNITO_REGION': props.cognitoRegion || "none",
+                'GATSBY_USER_POOL_ID': props.cognitoAuthEndpoints.userPoolId,
+                'GATSBY_USER_POOL_CLIENT_ID': props.cognitoAuthEndpoints.userPoolClientId,
+                'GATSBY_IDENTITY_POOL_ID': props.cognitoAuthEndpoints.identityPoolId,
+                'GATSBY_COGNITO_REGION': props.cognitoAuthEndpoints.region,
             },
             autoBranchCreation: { // Automatically connect branches that match a pattern set
                 patterns: ['feature/*', 'test/*'],
