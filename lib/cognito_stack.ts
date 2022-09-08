@@ -42,75 +42,7 @@ export class CognitoStack extends cdk.Stack {
         });
       
         
-        const isAnonymousCognitoGroupRole = new iam.Role(
-            this,
-            'anonymous-group-role',
-            {
-                description: 'Default role for anonymous users',
-                assumedBy: new iam.FederatedPrincipal(
-                'cognito-identity.amazonaws.com',
-                {
-                    StringEquals: {
-                    'cognito-identity.amazonaws.com:aud': identityPool.ref,
-                    },
-                    'ForAnyValue:StringLike': {
-                    'cognito-identity.amazonaws.com:amr': 'unauthenticated',
-                    },
-                },
-                'sts:AssumeRoleWithWebIdentity',
-                ),
-                managedPolicies: [
-                iam.ManagedPolicy.fromAwsManagedPolicyName(
-                    'service-role/AWSLambdaBasicExecutionRole',
-                ),
-                ],
-            },
-            );
-
-        const isUserCognitoGroupRole = new iam.Role(this, 'users-group-role', {
-            description: 'Default role for authenticated users',
-            assumedBy: new iam.FederatedPrincipal(
-                'cognito-identity.amazonaws.com',
-                {
-                StringEquals: {
-                    'cognito-identity.amazonaws.com:aud': identityPool.ref,
-                },
-                'ForAnyValue:StringLike': {
-                    'cognito-identity.amazonaws.com:amr': 'authenticated',
-                },
-                },
-                'sts:AssumeRoleWithWebIdentity',
-            ),
-            managedPolicies: [
-                iam.ManagedPolicy.fromAwsManagedPolicyName(
-                'service-role/AWSLambdaBasicExecutionRole',
-                ),
-            ],
-            });
-
-        
-        new cognito.CfnIdentityPoolRoleAttachment(
-                this,
-                'identity-pool-role-attachment',
-                {
-                  identityPoolId: identityPool.ref,
-                  roles: {
-                    authenticated: isUserCognitoGroupRole.roleArn,
-                    unauthenticated: isAnonymousCognitoGroupRole.roleArn,
-                  },
-                  roleMappings: {
-                    mapping: {
-                      type: 'Token',
-                      ambiguousRoleResolution: 'AuthenticatedRole',
-                      identityProvider: `cognito-idp.${
-                        cdk.Stack.of(this).region
-                      }.amazonaws.com/${userPool.userPoolId}:${
-                        userPoolClient.userPoolClientId
-                      }`,
-                    },
-                  },
-                },
-              );
+        this.setRole(identityPool, userPool, userPoolClient);
               
         this.cognitoAuthEndpoints = {
             userPoolId: userPool.userPoolId,
@@ -127,5 +59,73 @@ export class CognitoStack extends cdk.Stack {
         new cdk.CfnOutput(this, 'IdentityPoolId', {
             value: this.cognitoAuthEndpoints.identityPoolId,
         });
+    }
+
+    private setRole(identityPool: cognito.CfnIdentityPool, userPool: cognito.UserPool, userPoolClient: cognito.UserPoolClient) {
+        const isAnonymousCognitoGroupRole = new iam.Role(
+            this,
+            'anonymous-group-role',
+            {
+                description: 'Default role for anonymous users',
+                assumedBy: new iam.FederatedPrincipal(
+                    'cognito-identity.amazonaws.com',
+                    {
+                        StringEquals: {
+                            'cognito-identity.amazonaws.com:aud': identityPool.ref,
+                        },
+                        'ForAnyValue:StringLike': {
+                            'cognito-identity.amazonaws.com:amr': 'unauthenticated',
+                        },
+                    },
+                    'sts:AssumeRoleWithWebIdentity'
+                ),
+                managedPolicies: [
+                    iam.ManagedPolicy.fromAwsManagedPolicyName(
+                        'service-role/AWSLambdaBasicExecutionRole'
+                    ),
+                ],
+            }
+        );
+
+        const isUserCognitoGroupRole = new iam.Role(this, 'users-group-role', {
+            description: 'Default role for authenticated users',
+            assumedBy: new iam.FederatedPrincipal(
+                'cognito-identity.amazonaws.com',
+                {
+                    StringEquals: {
+                        'cognito-identity.amazonaws.com:aud': identityPool.ref,
+                    },
+                    'ForAnyValue:StringLike': {
+                        'cognito-identity.amazonaws.com:amr': 'authenticated',
+                    },
+                },
+                'sts:AssumeRoleWithWebIdentity'
+            ),
+            managedPolicies: [
+                iam.ManagedPolicy.fromAwsManagedPolicyName(
+                    'service-role/AWSLambdaBasicExecutionRole'
+                ),
+            ],
+        });
+
+
+        new cognito.CfnIdentityPoolRoleAttachment(
+            this,
+            'identity-pool-role-attachment',
+            {
+                identityPoolId: identityPool.ref,
+                roles: {
+                    authenticated: isUserCognitoGroupRole.roleArn,
+                    unauthenticated: isAnonymousCognitoGroupRole.roleArn,
+                },
+                roleMappings: {
+                    mapping: {
+                        type: 'Token',
+                        ambiguousRoleResolution: 'AuthenticatedRole',
+                        identityProvider: `cognito-idp.${cdk.Stack.of(this).region}.amazonaws.com/${userPool.userPoolId}:${userPoolClient.userPoolClientId}`,
+                    },
+                },
+            }
+        );
     }
 }
